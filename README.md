@@ -66,5 +66,4 @@ npm run tauri build
 
 ## 项目文档
 
-- `docs/架构设计.md`: 项目整体架构与实现方法 
-- `docs/数据库设计.md`: 数据库表结构, 字段说明与检索设计 
+见docs/ 
