@@ -503,6 +503,11 @@ mark
 
 
 
+.detail-footer
+{
+    display: flex;
+    justify-content: flex-end;
+}
 
 /* ============ 底部状态栏 ============ */
 #statusbar
@@ -689,6 +694,70 @@ mark
     color: var(--color-text-light);
 }
 
+/* ============ 表格类弹窗 ============ */
+.table-wrap
+{
+    flex: 1;
+    min-height: 140px;
+    overflow: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+}
+
+.data-table
+{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.data-table th
+{
+    position: sticky;
+    top: 0;
+    padding: 9px 12px;
+    background: var(--color-hover);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    color: var(--color-text-light);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.data-table td
+{
+    padding: 8px 12px;
+    border-top: 1px solid var(--color-border);
+    white-space: nowrap;
+}
+
+.data-table .col-id
+{
+    color: var(--color-text-light);
+    font-family: var(--font-code);
+}
+
+.data-table .col-time
+{
+    color: var(--color-text-light);
+    font-size: 12.5px;
+}
+
+.data-table .col-actions
+{
+    display: flex;
+    gap: 6px;
+}
+
+.empty-tip
+{
+    padding: 18px 8px;
+    font-size: 13px;
+    color: var(--color-text-light);
+    text-align: center;
+    letter-spacing: 0.3px;
+}
 
 /* ============ 历史记录 ============ */
 .history-columns

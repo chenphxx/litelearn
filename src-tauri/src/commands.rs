@@ -359,6 +359,103 @@ fn map_duplicate_stack_error(message: String) -> String
 }
 
 /**
+ * @brief 将文章移入回收站
+ *
+ * @param state 应用状态
+ * @param id 片段编号
+ * @return 受影响行数
+ */
+#[tauri::command]
+pub async fn delete_snippet(state: State<'_, AppState>, id: u64) -> Result<u64, String>
+{
+    let mut conn = db::get_conn(&state)?;
+    conn.exec_drop(
+        "UPDATE snippets SET deleted_at = NOW() WHERE id = ? AND deleted_at IS NULL",
+        (id,),
+    )
+    .map_err(|error| error.to_string())?;
+    Ok(conn.affected_rows())
+}
+
+/**
+ * @brief 查询回收站中的文章
+ *
+ * @param state 应用状态
+ * @return 回收站片段列表
+ */
+#[tauri::command]
+pub async fn list_deleted_snippets(state: State<'_, AppState>) -> Result<Vec<DeletedSnippet>, String>
+{
+    let mut conn = db::get_conn(&state)?;
+    conn.exec_map(
+        "SELECT p.id, k.name, p.zh_index, p.en_index, \
+         DATE_FORMAT(p.deleted_at, '%Y-%m-%d %H:%i:%s') AS deleted_at \
+         FROM snippets p JOIN stacks k ON k.id = p.stack_id \
+         WHERE p.deleted_at IS NOT NULL ORDER BY p.deleted_at DESC",
+        (),
+        |(id, stack_name, zh_index, en_index, deleted_at)| DeletedSnippet
+        {
+            id,
+            stack_name,
+            zh_index,
+            en_index,
+            deleted_at,
+        },
+    )
+    .map_err(|error| error.to_string())
+}
+
+/**
+ * @brief 从回收站还原文章
+ *
+ * @param state 应用状态
+ * @param id 片段编号
+ * @return 受影响行数
+ */
+#[tauri::command]
+pub async fn restore_snippet(state: State<'_, AppState>, id: u64) -> Result<u64, String>
+{
+    let mut conn = db::get_conn(&state)?;
+    conn.exec_drop(
+        "UPDATE snippets SET deleted_at = NULL WHERE id = ? AND deleted_at IS NOT NULL",
+        (id,),
+    )
+    .map_err(|error| error.to_string())?;
+    Ok(conn.affected_rows())
+}
+
+/**
+ * @brief 彻底删除单个片段
+ *
+ * @param state 应用状态
+ * @param id 片段编号
+ * @return 受影响行数
+ */
+#[tauri::command]
+pub async fn purge_snippet(state: State<'_, AppState>, id: u64) -> Result<u64, String>
+{
+    let mut conn = db::get_conn(&state)?;
+    conn.exec_drop("DELETE FROM snippets WHERE id = ?", (id,))
+        .map_err(|error| error.to_string())?;
+    Ok(conn.affected_rows())
+}
+
+/**
+ * @brief 清空回收站
+ *
+ * @param state 应用状态
+ * @return 受影响行数
+ */
+#[tauri::command]
+pub async fn purge_all_deleted(state: State<'_, AppState>) -> Result<u64, String>
+{
+    let mut conn = db::get_conn(&state)?;
+    conn.exec_drop("DELETE FROM snippets WHERE deleted_at IS NOT NULL", ())
+        .map_err(|error| error.to_string())?;
+    Ok(conn.affected_rows())
+}
+
+/**
  * @brief 导出备份文件
  *
  * @param state 应用状态

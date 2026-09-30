@@ -25,9 +25,11 @@ CREATE TABLE IF NOT EXISTS snippets (
     created_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
                                  ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    deleted_at   DATETIME        NULL DEFAULT NULL       COMMENT '删除时间, 非空表示已移入回收站',
     PRIMARY KEY (id),
     KEY idx_snippets_stack_zh (stack_id, zh_index),
     KEY idx_snippets_stack_en (stack_id, en_index),
+    KEY idx_snippets_stack_deleted (stack_id, deleted_at),
     CONSTRAINT fk_snippets_stack
         FOREIGN KEY (stack_id) REFERENCES stacks (id) ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '文章表'"#;
@@ -183,6 +185,11 @@ fn index_exists(conn: &mut PooledConn, table: &str, index: &str) -> Result<bool,
     Ok(count > 0)
 }
 
+ * 旧版本没有 deleted_at 字段, 首次运行自动补充, 保证数据不丢失
+    if !column_exists(conn, "snippets", "deleted_at")?
+            "ALTER TABLE snippets ADD COLUMN deleted_at DATETIME NULL DEFAULT NULL ",
+    if !index_exists(conn, "snippets", "idx_snippets_stack_deleted")?
+        conn.query_drop("ALTER TABLE snippets ADD INDEX idx_snippets_stack_deleted (stack_id, deleted_at)")
 /**
  * @brief 根据配置创建连接池, 并初始化数据库与表结构
  *
@@ -258,6 +265,7 @@ mod tests
     /**
      * @brief 旧版表结构迁移测试
      *
+     * 构造含 code_snippet 与 zh_comment 且没有 deleted_at 的旧表, 首次连接时应自动补齐结构并合并正文
      */
     #[test]
     fn test_legacy_schema_migration()
@@ -353,6 +361,7 @@ mod tests
                 concat!(
                     "SELECT COUNT(*) FROM information_schema.columns ",
                     "WHERE table_schema = DATABASE() AND table_name = 'snippets' ",
+                    "AND column_name = 'deleted_at'"
                 ),
                 (),
             )
@@ -364,6 +373,7 @@ mod tests
                 concat!(
                     "SELECT COUNT(DISTINCT index_name) FROM information_schema.statistics ",
                     "WHERE table_schema = DATABASE() AND table_name = 'snippets' ",
+                    "AND index_name = 'idx_snippets_stack_deleted'"
                 ),
                 (),
             )

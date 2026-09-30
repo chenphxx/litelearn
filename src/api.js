@@ -58,6 +58,53 @@ export function delete_stack(id)
     return invoke("delete_stack", { id });
 }
 
+export function delete_snippet(id)
+{
+    return invoke("delete_snippet", { id });
+}
+
+/**
+ * @brief 查询回收站文章
+ *
+ * @return 回收站片段列表
+ */
+export function list_deleted_snippets()
+{
+    return invoke("list_deleted_snippets");
+}
+
+/**
+ * @brief 从回收站还原文章
+ *
+ * @param id 片段编号
+ * @return 受影响行数
+ */
+export function restore_snippet(id)
+{
+    return invoke("restore_snippet", { id });
+}
+
+/**
+ * @brief 彻底删除文章
+ *
+ * @param id 片段编号
+ * @return 受影响行数
+ */
+export function purge_snippet(id)
+{
+    return invoke("purge_snippet", { id });
+}
+
+/**
+ * @brief 清空回收站
+ *
+ * @return 受影响行数
+ */
+export function purge_all_deleted()
+{
+    return invoke("purge_all_deleted");
+}
+
 /**
  * @brief 导出备份
  *

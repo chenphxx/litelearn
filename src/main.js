@@ -154,6 +154,7 @@ async function init()
     init_stacks();
     init_results();
     init_backup();
+    init_recycle();
     init_history();
     init_connection();
     wire_actions();

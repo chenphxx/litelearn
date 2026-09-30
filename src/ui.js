@@ -57,6 +57,7 @@ export const ui = {
     resultMeta: document.getElementById("result-meta"),
 
     // 详情区
+    btnDelete: document.getElementById("btn-delete"),
 
     // 弹窗
 
@@ -99,6 +100,12 @@ export const ui = {
     btnImportCancel: document.getElementById("btn-import-cancel"),
 
 
+    recycleDialog: document.getElementById("recycle-dialog"),
+    recycleBody: document.getElementById("recycle-body"),
+    recycleEmpty: document.getElementById("recycle-empty"),
+    recycleStatus: document.getElementById("recycle-status"),
+    btnRecycleClear: document.getElementById("btn-recycle-clear"),
+    btnRecycleClose: document.getElementById("btn-recycle-close"),
 
     historyDialog: document.getElementById("history-dialog"),
     historySearchList: document.getElementById("history-search-list"),

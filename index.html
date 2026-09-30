@@ -71,6 +71,9 @@
             </div>
             </div>
 
+            <div class="detail-footer">
+              <button id="btn-delete" class="btn danger" type="button">移入回收站</button>
+            </div>
           </div>
         </section>
       </main>
@@ -192,6 +195,35 @@
     </dialog>
 
 
+    <!-- 回收站弹窗 -->
+    <dialog id="recycle-dialog" class="dialog resizable-dialog">
+      <div class="dialog-box recycle-box">
+        <h3 class="drag-handle">回收站</h3>
+        <div class="dialog-toolbar">
+          <span id="recycle-status" class="setting-status"></span>
+          <span class="spacer"></span>
+          <button id="btn-recycle-clear" class="btn small danger" type="button">清空回收站</button>
+          <button id="btn-recycle-close" class="btn small" type="button">关闭</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="col-id">编号</th>
+                <th>技术栈</th>
+                <th>中文索引</th>
+                <th>英文索引</th>
+                <th class="col-time">删除时间</th>
+                <th class="col-actions">操作</th>
+              </tr>
+            </thead>
+            <tbody id="recycle-body"></tbody>
+          </table>
+        </div>
+        <p id="recycle-empty" class="empty-tip">回收站为空</p>
+      </div>
+      <div class="resize-handle"></div>
+    </dialog>
 
     <!-- 历史记录弹窗 -->
     <dialog id="history-dialog" class="dialog resizable-dialog">

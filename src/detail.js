@@ -78,5 +78,61 @@ export async function confirm_leave()
  *
  * @return 无
  */
+export async function delete_current()
+{
+    if (state.currentSnippetId === null)
+    {
+        return;
+    }
+    const id = state.currentSnippetId;
+    const ok = await show_confirm("该文章将移入回收站, 是否继续?", {
+        title: "删除文章",
+        okText: "移入回收站",
+        danger: true,
+    });
+    if (!ok)
+    {
+        return;
+    }
+    try
+    {
+        await api.delete_snippet(id);
+        state.currentSnippetId = null;
         state.snapshot = { zhIndex: "", enIndex: "", content: "" };
+        set_content("");
+        ui.detailBody.hidden = true;
+        ui.detailEmpty.hidden = false;
+        toast("已移入回收站", {
+            type: "success",
+            action: {
+                label: "撤销",
+                run: async () =>
+                {
+                    try
+                    {
+                        await api.restore_snippet(id);
+                        toast("已恢复", { type: "success" });
+                        await actions.reload_results();
+                    }
+                    catch (error)
+                    {
+                        toast(`恢复失败: ${error}`, { type: "error" });
+                    }
+                },
+            },
+        });
+        await actions.reload_results();
+    }
+    catch (error)
+    {
+        toast(`删除失败: ${error}`, { type: "error", timeout: 5000 });
+    }
+}
+
+/**
+ * @brief 复制正文内容
+ *
+ * @return 无
+ */
         input.addEventListener("input", update_dirty_indicator);
+    ui.btnDelete.addEventListener("click", delete_current);

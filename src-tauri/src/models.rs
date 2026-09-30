@@ -29,6 +29,24 @@ pub struct SearchResult
 }
 
 /**
+ * @brief 回收站中的文章
+ */
+#[derive(Serialize)]
+pub struct DeletedSnippet
+{
+    /** 片段编号 */
+    pub id: u64,
+    /** 所属技术栈名称 */
+    pub stack_name: String,
+    /** 中文索引 */
+    pub zh_index: String,
+    /** 英文索引 */
+    pub en_index: String,
+    /** 删除时间 */
+    pub deleted_at: String,
+}
+
+/**
  * @brief 备份导出结果统计
  */
 #[derive(Serialize)]
