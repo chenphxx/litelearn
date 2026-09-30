@@ -43,6 +43,7 @@ export const ui = {
     btnSearch: document.getElementById("btn-search"),
     btnNewData: document.getElementById("btn-new-data"),
     btnHistory: document.getElementById("btn-history"),
+    btnTheme: document.getElementById("btn-theme"),
     btnMore: document.getElementById("btn-more"),
     moreMenu: document.getElementById("more-menu"),
 
@@ -294,6 +295,216 @@ export function show_dialog(dialog)
  *
  * @return 弹窗记录
  */
+function load_dialog_bounds()
+{
+    try
+    {
+        return JSON.parse(localStorage.getItem("litelearn-dialog-bounds") || "{}");
+    }
+    catch (error)
+    {
+        return {};
+    }
+}
+
+/**
+ * @brief 恢复弹窗上次的位置与尺寸
+ *
+ * @param dialog 弹窗元素
+ * @return 无
+ */
+export function restore_dialog_bounds(dialog)
+{
+    const bounds = load_dialog_bounds()[dialog.id];
+    if (!is_valid_bounds(bounds))
+    {
+        return;
+    }
+    const width = Math.min(bounds.width, window.innerWidth);
+    const height = Math.min(bounds.height, window.innerHeight);
+    const max_left = Math.max(0, window.innerWidth - width);
+    const max_top = Math.max(0, window.innerHeight - height);
+    dialog.style.width = `${width}px`;
+    dialog.style.height = `${height}px`;
+    dialog.style.position = "fixed";
+    dialog.style.margin = "0";
+    dialog.style.left = `${Math.min(Math.max(0, bounds.left), max_left)}px`;
+    dialog.style.top = `${Math.min(Math.max(0, bounds.top), max_top)}px`;
+}
+
+/**
+ * @brief 判断弹窗位置与尺寸记录是否有效
+ *
+ * 弹窗关闭后元素不再渲染, 此时读取到的尺寸为 0, 这类记录不能用于恢复位置与尺寸
+ *
+ * @param bounds 弹窗位置与尺寸记录
+ * @return 记录是否有效
+ */
+function is_valid_bounds(bounds)
+{
+    return (
+        typeof bounds === "object" &&
+        bounds !== null &&
+        Number.isFinite(bounds.width) &&
+        Number.isFinite(bounds.height) &&
+        Number.isFinite(bounds.left) &&
+        Number.isFinite(bounds.top) &&
+        bounds.width > 0 &&
+        bounds.height > 0
+    );
+}
+
+/**
+ * @brief 保存弹窗位置与尺寸
+ *
+ * @param dialog 弹窗元素
+ * @return 无
+ */
+function save_dialog_bounds(dialog)
+{
+    if (!dialog.open || dialog.offsetWidth <= 0 || dialog.offsetHeight <= 0)
+    {
+        return;
+    }
+    const bounds = load_dialog_bounds();
+    const rect = dialog.getBoundingClientRect();
+    bounds[dialog.id] = {
+        width: dialog.offsetWidth,
+        height: dialog.offsetHeight,
+        left: rect.left,
+        top: rect.top,
+    };
+    localStorage.setItem("litelearn-dialog-bounds", JSON.stringify(bounds));
+}
+
+/**
+ * @brief 使弹窗可通过指定手柄拖动
+ *
+ * @param dialog 弹窗元素
+ * @param handle 拖动手柄
+ * @return 无
+ */
+export function enable_drag(dialog, handle)
+{
+    handle.addEventListener("pointerdown", (event) =>
+    {
+        if (event.button !== 0)
+        {
+            return;
+        }
+        event.preventDefault();
+        const rect = dialog.getBoundingClientRect();
+        const startX = event.clientX;
+        const startY = event.clientY;
+        const originLeft = rect.left;
+        const originTop = rect.top;
+        try
+        {
+            handle.setPointerCapture(event.pointerId);
+        }
+        catch (error)
+        {
+            // 忽略指针捕获失败
+        }
+        const on_move = (move_event) =>
+        {
+            dialog.style.position = "fixed";
+            dialog.style.margin = "0";
+            dialog.style.left = `${originLeft + move_event.clientX - startX}px`;
+            dialog.style.top = `${originTop + move_event.clientY - startY}px`;
+        };
+        const on_end = () =>
+        {
+            handle.removeEventListener("pointermove", on_move);
+            handle.removeEventListener("pointerup", on_end);
+            handle.removeEventListener("pointercancel", on_end);
+            save_dialog_bounds(dialog);
+        };
+        handle.addEventListener("pointermove", on_move);
+        handle.addEventListener("pointerup", on_end);
+        handle.addEventListener("pointercancel", on_end);
+    });
+}
+
+/**
+ * @brief 使弹窗可通过右下角手柄调整大小
+ *
+ * @param dialog 弹窗元素
+ * @param handle 缩放手柄
+ * @param minWidth 最小宽度
+ * @param minHeight 最小高度
+ * @return 无
+ */
+export function enable_resize(dialog, handle, minWidth, minHeight)
+{
+    handle.addEventListener("pointerdown", (event) =>
+    {
+        if (event.button !== 0)
+        {
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        const startX = event.clientX;
+        const startY = event.clientY;
+        const startWidth = dialog.offsetWidth;
+        const startHeight = dialog.offsetHeight;
+        try
+        {
+            handle.setPointerCapture(event.pointerId);
+        }
+        catch (error)
+        {
+            // 忽略指针捕获失败
+        }
+        const on_move = (move_event) =>
+        {
+            const width = Math.max(minWidth, startWidth + move_event.clientX - startX);
+            const height = Math.max(minHeight, startHeight + move_event.clientY - startY);
+            dialog.style.width = `${width}px`;
+            dialog.style.height = `${height}px`;
+        };
+        const on_end = () =>
+        {
+            handle.removeEventListener("pointermove", on_move);
+            handle.removeEventListener("pointerup", on_end);
+            handle.removeEventListener("pointercancel", on_end);
+            save_dialog_bounds(dialog);
+        };
+        handle.addEventListener("pointermove", on_move);
+        handle.addEventListener("pointerup", on_end);
+        handle.addEventListener("pointercancel", on_end);
+    });
+}
+
+/**
+ * @brief 为全部弹窗绑定拖动, 缩放与尺寸记忆
+ *
+ * @return 无
+ */
+export function bind_dialog_layout()
+{
+    for (const dialog of document.querySelectorAll("dialog.resizable-dialog"))
+    {
+        for (const handle of dialog.querySelectorAll(".drag-handle"))
+        {
+            enable_drag(dialog, handle);
+        }
+        for (const handle of dialog.querySelectorAll(".resize-handle"))
+        {
+            enable_resize(dialog, handle, 320, 200);
+        }
+    }
+}
+
+/**
+ * @brief 弹出多按钮确认框
+ *
+ * @param message 提示内容
+ * @param buttons 按钮定义列表
+ * @param options 其它参数, 支持 title 与 cancelValue
+ * @return Promise, 解析为被点击按钮的值
+ */
 export function show_choice(message, buttons, options = {})
 {
     return new Promise((resolve) =>
@@ -404,3 +615,138 @@ export function close_menu()
  *
  * @return 无
  */
+export function cycle_theme()
+{
+    const order = ["system", "light", "dark"];
+    const current = current_theme();
+    const next = order[(order.indexOf(current) + 1) % order.length];
+    apply_theme(next);
+    toast(`主题已切换为${theme_label(next)}`);
+}
+
+/**
+ * @brief 读取当前主题模式
+ *
+ * @return 主题模式
+ */
+export function current_theme()
+{
+    const saved = localStorage.getItem("litelearn-theme");
+    return ["system", "light", "dark"].includes(saved) ? saved : "system";
+}
+
+/**
+ * @brief 主题模式的中文名称
+ *
+ * @param mode 主题模式
+ * @return 中文名称
+ */
+export function theme_label(mode)
+{
+    if (mode === "dark")
+    {
+        return "深色";
+    }
+    if (mode === "light")
+    {
+        return "浅色";
+    }
+    return "跟随系统";
+}
+
+/**
+ * @brief 应用主题
+ *
+ * @param mode 主题模式, 支持 system / light / dark
+ * @return 无
+ */
+export function apply_theme(mode)
+{
+    const prefers_dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const resolved = mode === "system" ? (prefers_dark ? "dark" : "light") : mode;
+    document.documentElement.setAttribute("data-theme", resolved);
+    localStorage.setItem("litelearn-theme", mode);
+    ui.btnTheme.innerHTML = mode === "system" ? icons.monitor : (resolved === "dark" ? icons.sun : icons.moon);
+    ui.btnTheme.title = `主题: ${theme_label(mode)}, 点击切换`;
+    document.dispatchEvent(new CustomEvent("theme-change", { detail: { theme: resolved } }));
+}
+
+/**
+ * @brief 初始化主题, 并在跟随系统时响应系统主题变化
+ *
+ * @return 无
+ */
+export function init_theme()
+{
+    apply_theme(current_theme());
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    media.addEventListener("change", () =>
+    {
+        if (current_theme() === "system")
+        {
+            apply_theme("system");
+        }
+    });
+}
+
+/**
+ * @brief 当前是否为深色主题
+ *
+ * @return 是否深色
+ */
+export function is_dark()
+{
+    return document.documentElement.getAttribute("data-theme") === "dark";
+}
+
+/**
+ * @brief 恢复上次的窗口尺寸
+ *
+ * @return 无
+ */
+export async function init_window_size()
+{
+    try
+    {
+        const saved = JSON.parse(localStorage.getItem("litelearn-window-size") || "null");
+        if (saved && saved.width && saved.height)
+        {
+            await getCurrentWindow().setSize(new LogicalSize(saved.width, saved.height));
+        }
+    }
+    catch (error)
+    {
+        // 窗口尺寸记忆不可用时忽略
+    }
+}
+
+/**
+ * @brief 监听窗口尺寸变化并记录
+ *
+ * @return 无
+ */
+export async function watch_window_size()
+{
+    try
+    {
+        let timer = null;
+        await getCurrentWindow().onResized(({ payload }) =>
+        {
+            clearTimeout(timer);
+            timer = setTimeout(() =>
+            {
+                const factor = window.devicePixelRatio || 1;
+                const width = Math.round(payload.width / factor);
+                const height = Math.round(payload.height / factor);
+                if (width >= 900 && height >= 600)
+                {
+                    localStorage.setItem("litelearn-window-size", JSON.stringify({ width, height }));
+                }
+            }, 400);
+        });
+    }
+    catch (error)
+    {
+        // 事件监听不可用时忽略
+    }
+}

@@ -36,6 +36,56 @@
     color-scheme: light;
 }
 
+/* 深色模式配色 */
+[data-theme="dark"]
+{
+    --color-primary: #57bf98;
+    --color-primary-dark: #48a884;
+    --color-primary-soft: #274a3c;
+    --color-danger: #d97a72;
+    --color-border: #39424a;
+    --color-bg: #1b1e23;
+    --color-panel: #24282f;
+    --color-text: #e7eaee;
+    --color-text-light: #98a1ab;
+    --color-hover: #2f353e;
+    --color-row-hover: #2a323a;
+    --color-row-selected: #2c4238;
+    --color-input-bg: #1b1e23;
+    --color-console-bg: #1b1e23;
+    --color-mark: #5a4a22;
+    --color-overlay: rgba(0, 0, 0, 0.55);
+    --shadow-soft: 0 10px 36px rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
+}
+
+html,
+body
+{
+    height: 100%;
+}
+
+body
+{
+    font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-size: 14px;
+    color: var(--color-text);
+    background: var(--color-bg);
+    -webkit-font-smoothing: antialiased;
+}
+
+button
+{
+    font-family: inherit;
+}
+
+#app
+{
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
 /* ============ 顶部工具栏 ============ */
 .toolbar
 {

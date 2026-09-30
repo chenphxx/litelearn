@@ -112,6 +112,59 @@ function init_sidebar_toggle()
  *
  * @return 无
  */
+function init_splitter()
+{
+    const splitter = ui.splitter;
+    const panel = ui.detailPanel;
+    if (!splitter)
+    {
+        return;
+    }
+    const min_width = 320;
+    const min_result_width = 320;
+    const saved = Number(localStorage.getItem("litelearn-detail-width"));
+    if (saved >= min_width)
+    {
+        panel.style.width = `${saved}px`;
+    }
+    splitter.addEventListener("pointerdown", (event) =>
+    {
+        if (event.button !== 0)
+        {
+            return;
+        }
+        event.preventDefault();
+        const start_x = event.clientX;
+        const start_width = panel.offsetWidth;
+        const max_width = Math.max(min_width, window.innerWidth - min_result_width);
+        splitter.classList.add("dragging");
+        try
+        {
+            splitter.setPointerCapture(event.pointerId);
+        }
+        catch (error)
+        {
+            // 忽略指针捕获失败
+        }
+        const on_move = (move_event) =>
+        {
+            const delta = move_event.clientX - start_x;
+            const width = Math.min(max_width, Math.max(min_width, start_width - delta));
+            panel.style.width = `${width}px`;
+        };
+        const on_end = () =>
+        {
+            splitter.classList.remove("dragging");
+            splitter.removeEventListener("pointermove", on_move);
+            splitter.removeEventListener("pointerup", on_end);
+            splitter.removeEventListener("pointercancel", on_end);
+            localStorage.setItem("litelearn-detail-width", String(panel.offsetWidth));
+        };
+        splitter.addEventListener("pointermove", on_move);
+        splitter.addEventListener("pointerup", on_end);
+        splitter.addEventListener("pointercancel", on_end);
+    });
+}
 
 /**
  * @brief 初始化快捷键
@@ -174,10 +227,12 @@ async function init()
     wire_actions();
     init_menu_actions();
     init_sidebar_toggle();
+    init_splitter();
     init_icons();
     init_shortcuts();
 
     ui.btnSearch.addEventListener("click", do_search);
+    ui.btnTheme.addEventListener("click", cycle_theme);
     ui.searchInput.addEventListener("keydown", (event) =>
     {
         if (event.key === "Enter")
@@ -186,6 +241,8 @@ async function init()
         }
     });
 
+    await init_window_size();
+    watch_window_size();
     await load_stacks();
 
     const connected = await refresh_connection();
