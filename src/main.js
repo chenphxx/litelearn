@@ -164,6 +164,8 @@ async function init()
     init_menu();
     init_stacks();
     init_results();
+    init_detail();
+    init_snippet_form();
     init_backup();
     init_recycle();
     init_history();

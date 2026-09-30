@@ -17,6 +17,28 @@ pub struct StackInfo
 }
 
 /**
+ * @brief 文章信息
+ */
+#[derive(Serialize, Clone)]
+pub struct Snippet
+{
+    /** 片段编号 */
+    pub id: u64,
+    /** 所属技术栈编号 */
+    pub stack_id: u32,
+    /** 中文索引 */
+    pub zh_index: String,
+    /** 英文索引 */
+    pub en_index: String,
+    /** 正文 */
+    pub content: String,
+    /** 创建时间 */
+    pub created_at: String,
+    /** 更新时间 */
+    pub updated_at: String,
+}
+
+/**
  * @brief 检索结果
  */
 #[derive(Serialize)]

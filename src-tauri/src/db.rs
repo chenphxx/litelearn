@@ -185,11 +185,64 @@ fn index_exists(conn: &mut PooledConn, table: &str, index: &str) -> Result<bool,
     Ok(count > 0)
 }
 
+/**
+ * @brief 补齐旧版本数据库缺失的字段与索引
+ *
+ * 旧版本正文列名为 code_snippet, 首次运行改名为 content, 正文类型统一为 MEDIUMTEXT;
+ * 旧版本将中文说明单独存放, 首次运行并入正文后删除该列;
  * 旧版本没有 deleted_at 字段, 首次运行自动补充, 保证数据不丢失
+ *
+ * @param conn 数据库连接
+ * @return 无
+ */
+fn ensure_schema(conn: &mut PooledConn) -> Result<(), String>
+{
+    if column_exists(conn, "snippets", "code_snippet")? && !column_exists(conn, "snippets", "content")?
+    {
+        conn.query_drop(concat!(
+            "ALTER TABLE snippets CHANGE COLUMN code_snippet content ",
+            "MEDIUMTEXT NOT NULL COMMENT '正文, 以文章形式记录知识点'"
+        ))
+        .map_err(|error| error.to_string())?;
+    }
+    else if let Some(data_type) = column_type(conn, "snippets", "content")?
+    {
+        if data_type != "mediumtext"
+        {
+            conn.query_drop(concat!(
+                "ALTER TABLE snippets MODIFY COLUMN content ",
+                "MEDIUMTEXT NOT NULL COMMENT '正文, 以文章形式记录知识点'"
+            ))
+            .map_err(|error| error.to_string())?;
+        }
+    }
+    if column_exists(conn, "snippets", "zh_comment")?
+    {
+        conn.query_drop(concat!(
+            "UPDATE snippets SET content = ",
+            "CONCAT(content, IF(content = '', '', '\\n\\n'), zh_comment) ",
+            "WHERE zh_comment <> ''"
+        ))
+        .map_err(|error| error.to_string())?;
+        conn.query_drop("ALTER TABLE snippets DROP COLUMN zh_comment")
+            .map_err(|error| error.to_string())?;
+    }
     if !column_exists(conn, "snippets", "deleted_at")?
+    {
+        conn.query_drop(concat!(
             "ALTER TABLE snippets ADD COLUMN deleted_at DATETIME NULL DEFAULT NULL ",
+            "COMMENT '删除时间, 非空表示已移入回收站' AFTER updated_at"
+        ))
+        .map_err(|error| error.to_string())?;
+    }
     if !index_exists(conn, "snippets", "idx_snippets_stack_deleted")?
+    {
         conn.query_drop("ALTER TABLE snippets ADD INDEX idx_snippets_stack_deleted (stack_id, deleted_at)")
+            .map_err(|error| error.to_string())?;
+    }
+    Ok(())
+}
+
 /**
  * @brief 根据配置创建连接池, 并初始化数据库与表结构
  *

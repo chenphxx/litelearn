@@ -58,6 +58,34 @@ export function delete_stack(id)
     return invoke("delete_stack", { id });
 }
 
+/**
+ * @brief 新增文章
+ *
+ * @param payload 文章内容
+ * @return 新文章编号
+ */
+export function add_snippet(payload)
+{
+    return invoke("add_snippet", payload);
+}
+
+/**
+ * @brief 更新文章
+ *
+ * @param payload 片段内容
+ * @return 受影响行数
+ */
+export function update_snippet(payload)
+{
+    return invoke("update_snippet", payload);
+}
+
+/**
+ * @brief 将文章移入回收站
+ *
+ * @param id 片段编号
+ * @return 受影响行数
+ */
 export function delete_snippet(id)
 {
     return invoke("delete_snippet", { id });

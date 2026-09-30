@@ -41,6 +41,7 @@ export const ui = {
     connText: document.getElementById("conn-text"),
     searchInput: document.getElementById("search-input"),
     btnSearch: document.getElementById("btn-search"),
+    btnNewData: document.getElementById("btn-new-data"),
     btnHistory: document.getElementById("btn-history"),
     btnMore: document.getElementById("btn-more"),
     moreMenu: document.getElementById("more-menu"),
@@ -61,9 +62,26 @@ export const ui = {
     resultMeta: document.getElementById("result-meta"),
 
     // 详情区
+    detailPanel: document.getElementById("detail-panel"),
+    detailEmpty: document.getElementById("detail-empty"),
+    detailBody: document.getElementById("detail-body"),
+    codeId: document.getElementById("code-id"),
+    detailStack: document.getElementById("detail-stack"),
+    detailCreated: document.getElementById("detail-created"),
+    detailUpdated: document.getElementById("detail-updated"),
+    detailLines: document.getElementById("detail-lines"),
+    btnCodeSave: document.getElementById("btn-code-save"),
     btnDelete: document.getElementById("btn-delete"),
 
     // 弹窗
+    newDataDialog: document.getElementById("new-data-dialog"),
+    newDataTitle: document.getElementById("new-data-title"),
+    newDataStack: document.getElementById("new-data-stack"),
+    newDataZh: document.getElementById("new-data-zh-index"),
+    newDataEn: document.getElementById("new-data-en-index"),
+    newDataCode: document.getElementById("new-data-code"),
+    btnNewDataSave: document.getElementById("btn-new-data-save"),
+    btnNewDataCancel: document.getElementById("btn-new-data-cancel"),
 
     stackDialog: document.getElementById("stack-dialog"),
     stackDialogTitle: document.getElementById("stack-dialog-title"),

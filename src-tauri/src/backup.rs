@@ -4,6 +4,9 @@ use mysql::{PooledConn, Value};
 use serde::Deserialize;
 use std::collections::HashMap;
 
+/** CSV 表头 */
+const CSV_HEADER: &str = "stack_name,id,zh_index,en_index,content,created_at,updated_at";
+
 /** @brief 备份导出结果 */
 pub struct ExportOutput
 {
@@ -60,6 +63,39 @@ struct ImportPlan
     snippets_skipped: usize,
 }
 
+/** @brief JSON 备份中的片段数据 */
+#[derive(Deserialize)]
+struct ImportSnippet
+{
+    /** 片段编号 */
+    #[serde(default)]
+    id: u64,
+    /** 所属技术栈编号 */
+    #[serde(default)]
+    stack_id: u32,
+    /** 所属技术栈名称, 可选, 优先于编号 */
+    #[serde(default)]
+    stack_name: Option<String>,
+    /** 中文索引 */
+    #[serde(default)]
+    zh_index: String,
+    /** 英文索引 */
+    #[serde(default)]
+    en_index: String,
+    /** 正文, 兼容旧版备份的 code_snippet 字段 */
+    #[serde(default, alias = "code_snippet")]
+    content: String,
+    /** 中文说明, 旧版备份字段, 导入时合并进正文 */
+    #[serde(default)]
+    zh_comment: Option<String>,
+    /** 创建时间 */
+    #[serde(default)]
+    created_at: Option<String>,
+    /** 更新时间 */
+    #[serde(default)]
+    updated_at: Option<String>,
+}
+
 /** @brief JSON 备份数据, 导入用 */
 #[derive(Deserialize)]
 struct ImportBackupData
@@ -90,6 +126,29 @@ fn csv_escape(value: &str) -> String
     {
         value.to_string()
     }
+}
+
+/**
+ * @brief 合并旧版备份中的正文与中文说明
+ *
+ * 旧版备份将内容拆分为两个字段, 新版合并为一个字段, 导入旧备份时拼接为同一段内容
+ *
+ * @param content 正文
+ * @param comment 中文说明
+ * @return 合并后的内容
+ */
+fn merge_legacy_comment(content: String, comment: String) -> String
+{
+    let comment = comment.trim();
+    if comment.is_empty()
+    {
+        return content;
+    }
+    if content.trim().is_empty()
+    {
+        return comment.to_string();
+    }
+    format!("{}\n\n{}", content.trim_end(), comment)
 }
 
 /**

@@ -23,6 +23,7 @@
         />
         <button id="btn-search" class="btn primary" type="button"></button>
         <span class="spacer"></span>
+        <button id="btn-new-data" class="btn primary" type="button"></button>
         <button id="btn-history" class="btn icon" type="button" title="历史记录"></button>
         <button id="btn-more" class="btn icon" type="button" title="更多操作"></button>
         <div id="more-menu" class="more-menu" hidden>
@@ -78,8 +79,17 @@
           <div id="detail-empty" class="detail-empty">
             <p>从左侧列表选择一篇文章查看详情</p>
           </div>
+          <div id="detail-body" class="detail-body" hidden>
+            <div class="detail-header">
+              <h3>文章 <span id="code-id" class="snippet-id"></span></h3>
+              <div class="btn-group">
               </div>
             </div>
+            <div class="detail-meta">
+              <span id="detail-stack" class="meta-stack"></span>
+              <span>创建 <span id="detail-created"></span></span>
+              <span>更新 <span id="detail-updated"></span></span>
+              <span id="detail-lines"></span>
             </div>
 
             <div class="detail-footer">
@@ -97,6 +107,32 @@
     <div id="drop-hint" class="drop-hint" hidden>松开鼠标导入备份文件</div>
 
     <!-- 新增数据弹窗 -->
+    <dialog id="new-data-dialog" class="dialog resizable-dialog">
+      <div class="dialog-box">
+        <h3 id="new-data-title" class="drag-handle">新增数据</h3>
+        <div class="form-row">
+          <label for="new-data-stack">技术栈</label>
+          <select id="new-data-stack"></select>
+        </div>
+        <div class="form-row">
+          <label for="new-data-zh-index">中文索引</label>
+          <input id="new-data-zh-index" type="text" />
+        </div>
+        <div class="form-row">
+          <label for="new-data-en-index">英文索引</label>
+          <input id="new-data-en-index" type="text" />
+        </div>
+        <div class="form-row form-row-block">
+          <label for="new-data-code">正文</label>
+          <textarea id="new-data-code" spellcheck="false" placeholder="在此撰写知识点文章, 支持 Markdown 与代码块"></textarea>
+        </div>
+        <div class="dialog-buttons">
+          <button id="btn-new-data-save" class="btn primary" type="button">保存</button>
+          <button id="btn-new-data-cancel" class="btn" type="button">取消</button>
+        </div>
+      </div>
+      <div class="resize-handle"></div>
+    </dialog>
 
     <!-- 技术栈编辑弹窗 -->
     <dialog id="stack-dialog" class="dialog resizable-dialog">

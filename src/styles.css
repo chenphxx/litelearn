@@ -611,6 +611,65 @@ mark
     color: var(--color-text-light);
 }
 
+/* ============ 详情区 ============ */
+.detail-panel
+{
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    width: 44%;
+    min-width: 360px;
+    padding: 16px 20px;
+    overflow: hidden;
+    background: var(--color-panel);
+}
+
+.detail-empty
+{
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-light);
+    letter-spacing: 0.5px;
+}
+
+.detail-body
+{
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    gap: 10px;
+}
+
+.detail-header
+{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.detail-header h3
+{
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.snippet-id
+{
+    color: var(--color-primary);
+    font-family: var(--font-code);
+    font-size: 13px;
+}
+
+.snippet-id.dirty::after
+{
+    content: " ●";
+    color: var(--color-danger);
+}
 
 .btn-group
 {

@@ -359,6 +359,87 @@ fn map_duplicate_stack_error(message: String) -> String
 }
 
 /**
+ * @brief 新增文章
+ *
+ * @param state 应用状态
+ * @param stack_id 技术栈编号
+ * @param zh_index 中文索引
+ * @param en_index 英文索引
+ * @param content 正文
+ * @return 新片段编号
+ */
+#[tauri::command]
+pub async fn add_snippet(
+    state: State<'_, AppState>,
+    stack_id: u32,
+    zh_index: String,
+    en_index: String,
+    content: String,
+) -> Result<u64, String>
+{
+    if content.trim().is_empty()
+    {
+        return Err(String::from("正文不能为空"));
+    }
+    if zh_index.trim().is_empty() && en_index.trim().is_empty()
+    {
+        return Err(String::from("中文索引与英文索引至少填写一项"));
+    }
+
+    let mut conn = db::get_conn(&state)?;
+    conn.exec_drop(
+        concat!(
+            "INSERT INTO snippets (stack_id, zh_index, en_index, content) ",
+            "VALUES (?, ?, ?, ?)"
+        ),
+        (
+            stack_id,
+            zh_index.trim().to_string(),
+            en_index.trim().to_string(),
+            content,
+        ),
+    )
+    .map_err(|error| error.to_string())?;
+    Ok(conn.last_insert_id())
+}
+
+/**
+ * @brief 更新文章
+ *
+ * @param state 应用状态
+ * @param id 片段编号
+ * @param zh_index 中文索引
+ * @param en_index 英文索引
+ * @param content 正文
+ * @return 受影响行数
+ */
+#[tauri::command]
+pub async fn update_snippet(
+    state: State<'_, AppState>,
+    id: u64,
+    zh_index: String,
+    en_index: String,
+    content: String,
+) -> Result<u64, String>
+{
+    let mut conn = db::get_conn(&state)?;
+    conn.exec_drop(
+        concat!(
+            "UPDATE snippets SET zh_index = ?, en_index = ?, content = ? ",
+            "WHERE id = ? AND deleted_at IS NULL"
+        ),
+        (
+            zh_index.trim().to_string(),
+            en_index.trim().to_string(),
+            content,
+            id,
+        ),
+    )
+    .map_err(|error| error.to_string())?;
+    Ok(conn.affected_rows())
+}
+
+/**
  * @brief 将文章移入回收站
  *
  * @param state 应用状态
