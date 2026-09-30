@@ -14,15 +14,14 @@ CREATE TABLE IF NOT EXISTS stacks (
     UNIQUE KEY uk_stacks_name (name)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '技术栈表'"#;
 
-/** 代码片段表建表语句 */
+/** 文章表建表语句 */
 const CREATE_SNIPPETS_SQL: &str = r#"
 CREATE TABLE IF NOT EXISTS snippets (
-    id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '片段编号, 兼容旧版 number_index',
+    id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '文章编号, 兼容旧版 number_index',
     stack_id     INT UNSIGNED    NOT NULL                COMMENT '所属技术栈, 外键',
     zh_index     VARCHAR(128)    NOT NULL DEFAULT ''     COMMENT '中文索引',
     en_index     VARCHAR(128)    NOT NULL DEFAULT ''     COMMENT '英文索引',
-    code_snippet MEDIUMTEXT      NOT NULL                COMMENT '代码片段',
-    zh_comment   MEDIUMTEXT      NOT NULL                COMMENT '中文说明',
+    content      MEDIUMTEXT      NOT NULL                COMMENT '正文, 以文章形式记录知识点',
     created_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
                                  ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -31,27 +30,31 @@ CREATE TABLE IF NOT EXISTS snippets (
     KEY idx_snippets_stack_en (stack_id, en_index),
     CONSTRAINT fk_snippets_stack
         FOREIGN KEY (stack_id) REFERENCES stacks (id) ON DELETE CASCADE
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '代码片段表'"#;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '文章表'"#;
 
 /**
  * @brief 应用全局状态
  */
-pub struct AppState {
+pub struct AppState
+{
     /** 数据库连接配置 */
     pub config: Mutex<DbConfig>,
     /** 数据库连接池, 懒加载 */
     pub pool: Mutex<Option<Pool>>,
 }
 
-impl AppState {
+impl AppState
+{
     /**
      * @brief 创建应用状态
      *
      * @param config 数据库连接配置
      * @return 应用状态
      */
-    pub fn new(config: DbConfig) -> Self {
-        AppState {
+    pub fn new(config: DbConfig) -> Self
+    {
+        AppState
+        {
             config: Mutex::new(config),
             pool: Mutex::new(None),
         }
@@ -62,9 +65,11 @@ impl AppState {
      *
      * @return 数据库连接池
      */
-    pub fn get_pool(&self) -> Result<Pool, String> {
+    pub fn get_pool(&self) -> Result<Pool, String>
+    {
         let mut guard = self.pool.lock().map_err(|_| String::from("连接池状态异常"))?;
-        if let Some(pool) = guard.as_ref() {
+        if let Some(pool) = guard.as_ref()
+        {
             return Ok(pool.clone());
         }
         let config = self
@@ -82,8 +87,10 @@ impl AppState {
      *
      * @return 无
      */
-    pub fn reset_pool(&self) {
-        if let Ok(mut guard) = self.pool.lock() {
+    pub fn reset_pool(&self)
+    {
+        if let Ok(mut guard) = self.pool.lock()
+        {
             *guard = None;
         }
     }
@@ -96,16 +103,84 @@ impl AppState {
  * @param with_db 是否指定数据库
  * @return 连接参数
  */
-fn build_opts(config: &DbConfig, with_db: bool) -> Opts {
+pub(crate) fn build_opts(config: &DbConfig, with_db: bool) -> Opts
+{
     let mut builder = OptsBuilder::new()
         .ip_or_hostname(Some(config.host.clone()))
         .tcp_port(config.port)
         .user(Some(config.user.clone()))
         .pass(Some(config.password.clone()));
-    if with_db {
+    if with_db
+    {
         builder = builder.db_name(Some(config.database.clone()));
     }
     builder.into()
+}
+
+/**
+ * @brief 查询数据表字段的数据类型
+ *
+ * @param conn 数据库连接
+ * @param table 表名
+ * @param column 字段名
+ * @return 字段类型, 字段不存在时为空
+ */
+fn column_type(conn: &mut PooledConn, table: &str, column: &str) -> Result<Option<String>, String>
+{
+    conn.exec_first(
+        concat!(
+            "SELECT DATA_TYPE FROM information_schema.columns ",
+            "WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?"
+        ),
+        (table, column),
+    )
+    .map_err(|error| error.to_string())
+}
+
+/**
+ * @brief 判断数据表字段是否存在
+ *
+ * @param conn 数据库连接
+ * @param table 表名
+ * @param column 字段名
+ * @return 是否存在
+ */
+fn column_exists(conn: &mut PooledConn, table: &str, column: &str) -> Result<bool, String>
+{
+    let count: u64 = conn
+        .exec_first(
+            concat!(
+                "SELECT COUNT(*) FROM information_schema.columns ",
+                "WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?"
+            ),
+            (table, column),
+        )
+        .map_err(|error| error.to_string())?
+        .unwrap_or(0);
+    Ok(count > 0)
+}
+
+/**
+ * @brief 判断数据表索引是否存在
+ *
+ * @param conn 数据库连接
+ * @param table 表名
+ * @param index 索引名
+ * @return 是否存在
+ */
+fn index_exists(conn: &mut PooledConn, table: &str, index: &str) -> Result<bool, String>
+{
+    let count: u64 = conn
+        .exec_first(
+            concat!(
+                "SELECT COUNT(*) FROM information_schema.statistics ",
+                "WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?"
+            ),
+            (table, index),
+        )
+        .map_err(|error| error.to_string())?
+        .unwrap_or(0);
+    Ok(count > 0)
 }
 
 /**
@@ -114,7 +189,8 @@ fn build_opts(config: &DbConfig, with_db: bool) -> Opts {
  * @param config 数据库配置
  * @return 数据库连接池
  */
-pub fn create_pool(config: &DbConfig) -> Result<Pool, String> {
+pub fn create_pool(config: &DbConfig) -> Result<Pool, String>
+{
     // 1. 先连接服务器(不指定数据库), 确保目标数据库存在
     let bootstrap_pool = Pool::new(build_opts(config, false)).map_err(|error| error.to_string())?;
     let mut bootstrap_conn = bootstrap_pool
@@ -128,13 +204,14 @@ pub fn create_pool(config: &DbConfig) -> Result<Pool, String> {
         .map_err(|error| error.to_string())?;
     drop(bootstrap_conn);
 
-    // 2. 连接目标数据库, 初始化表结构
+    // 2. 连接目标数据库, 初始化表结构并补齐旧版本缺失的字段
     let pool = Pool::new(build_opts(config, true)).map_err(|error| error.to_string())?;
     let mut conn = pool.get_conn().map_err(|error| error.to_string())?;
     conn.query_drop(CREATE_STACKS_SQL)
         .map_err(|error| error.to_string())?;
     conn.query_drop(CREATE_SNIPPETS_SQL)
         .map_err(|error| error.to_string())?;
+    ensure_schema(&mut conn)?;
     Ok(pool)
 }
 
@@ -144,7 +221,175 @@ pub fn create_pool(config: &DbConfig) -> Result<Pool, String> {
  * @param state 应用状态
  * @return 数据库连接
  */
-pub fn get_conn(state: &AppState) -> Result<PooledConn, String> {
+pub fn get_conn(state: &AppState) -> Result<PooledConn, String>
+{
     let pool = state.get_pool()?;
     pool.get_conn().map_err(|error| error.to_string())
+}
+
+
+#[cfg(test)]
+mod tests
+{
+    use super::*;
+
+    /**
+     * @brief 读取数据库测试配置
+     *
+     * 测试需要本机 MySQL 服务, 通过环境变量 LITELEARN_RUN_DB_TEST 与 LITELEARN_DB_PASSWORD 触发
+     *
+     * @return 测试数据库配置
+     */
+    fn test_config() -> DbConfig
+    {
+        DbConfig
+        {
+            host: std::env::var("LITELEARN_DB_HOST").unwrap_or_else(|_| String::from("127.0.0.1")),
+            port: std::env::var("LITELEARN_DB_PORT")
+                .ok()
+                .and_then(|value| value.parse().ok())
+                .unwrap_or(3306),
+            user: std::env::var("LITELEARN_DB_USER").unwrap_or_else(|_| String::from("root")),
+            password: std::env::var("LITELEARN_DB_PASSWORD").unwrap_or_default(),
+            database: String::from("litelearn_migration_test"),
+        }
+    }
+
+    /**
+     * @brief 旧版表结构迁移测试
+     *
+     */
+    #[test]
+    fn test_legacy_schema_migration()
+    {
+        if std::env::var("LITELEARN_RUN_DB_TEST").is_err()
+            || std::env::var("LITELEARN_DB_PASSWORD").is_err()
+        {
+            return;
+        }
+        let config = test_config();
+
+        // 1. 重建测试数据库
+        let bootstrap_pool = Pool::new(build_opts(&config, false)).expect("连接数据库服务失败");
+        let mut bootstrap_conn = bootstrap_pool.get_conn().expect("获取连接失败");
+        bootstrap_conn
+            .query_drop("DROP DATABASE IF EXISTS `litelearn_migration_test`")
+            .expect("清理测试库失败");
+        bootstrap_conn
+            .query_drop("CREATE DATABASE `litelearn_migration_test` DEFAULT CHARACTER SET utf8mb4")
+            .expect("创建测试库失败");
+        drop(bootstrap_conn);
+
+        // 2. 构造旧版表结构与旧数据
+        let legacy_pool = Pool::new(build_opts(&config, true)).expect("连接测试库失败");
+        let mut legacy_conn = legacy_pool.get_conn().expect("获取连接失败");
+        legacy_conn
+            .query_drop(concat!(
+                "CREATE TABLE stacks (",
+                "id INT UNSIGNED NOT NULL AUTO_INCREMENT,",
+                "name VARCHAR(64) NOT NULL,",
+                "description VARCHAR(255) NOT NULL DEFAULT '',",
+                "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+                "PRIMARY KEY (id), UNIQUE KEY uk_stacks_name (name)",
+                ") ENGINE = InnoDB DEFAULT CHARSET = utf8mb4"
+            ))
+            .expect("创建旧版技术栈表失败");
+        legacy_conn
+            .query_drop(concat!(
+                "CREATE TABLE snippets (",
+                "id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,",
+                "stack_id INT UNSIGNED NOT NULL,",
+                "zh_index VARCHAR(128) NOT NULL DEFAULT '',",
+                "en_index VARCHAR(128) NOT NULL DEFAULT '',",
+                "code_snippet MEDIUMTEXT NOT NULL,",
+                "zh_comment MEDIUMTEXT NOT NULL,",
+                "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+                "updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,",
+                "PRIMARY KEY (id)",
+                ") ENGINE = InnoDB DEFAULT CHARSET = utf8mb4"
+            ))
+            .expect("创建旧版文章表失败");
+        legacy_conn
+            .exec_drop(
+                "INSERT INTO stacks (id, name, description) VALUES (1, 'C', '')",
+                (),
+            )
+            .expect("写入技术栈失败");
+        legacy_conn
+            .exec_drop(
+                concat!(
+                    "INSERT INTO snippets ",
+                    "(id, stack_id, zh_index, en_index, code_snippet, zh_comment) ",
+                    "VALUES (1, 1, '字符类型', 'char', 'char val = 0;', '占用一个字节')"
+                ),
+                (),
+            )
+            .expect("写入旧版内容失败");
+        drop(legacy_conn);
+        drop(legacy_pool);
+
+        // 3. 首次连接触发建表与迁移
+        let pool = create_pool(&config).expect("初始化数据库失败");
+        let mut conn = pool.get_conn().expect("获取连接失败");
+        let content: String = conn
+            .query_first("SELECT content FROM snippets WHERE id = 1")
+            .expect("查询正文失败")
+            .expect("旧数据丢失");
+        assert_eq!(content, "char val = 0;\n\n占用一个字节");
+        let legacy_columns: u64 = conn
+            .exec_first(
+                concat!(
+                    "SELECT COUNT(*) FROM information_schema.columns ",
+                    "WHERE table_schema = DATABASE() AND table_name = 'snippets' ",
+                    "AND column_name IN ('code_snippet', 'zh_comment')"
+                ),
+                (),
+            )
+            .expect("查询字段失败")
+            .unwrap_or(0);
+        assert_eq!(legacy_columns, 0);
+        let deleted_column: u64 = conn
+            .exec_first(
+                concat!(
+                    "SELECT COUNT(*) FROM information_schema.columns ",
+                    "WHERE table_schema = DATABASE() AND table_name = 'snippets' ",
+                ),
+                (),
+            )
+            .expect("查询字段失败")
+            .unwrap_or(0);
+        assert_eq!(deleted_column, 1);
+        let deleted_index: u64 = conn
+            .exec_first(
+                concat!(
+                    "SELECT COUNT(DISTINCT index_name) FROM information_schema.statistics ",
+                    "WHERE table_schema = DATABASE() AND table_name = 'snippets' ",
+                ),
+                (),
+            )
+            .expect("查询索引失败")
+            .unwrap_or(0);
+        assert_eq!(deleted_index, 1);
+        let content_type: String = conn
+            .exec_first(
+                concat!(
+                    "SELECT DATA_TYPE FROM information_schema.columns ",
+                    "WHERE table_schema = DATABASE() AND table_name = 'snippets' ",
+                    "AND column_name = 'content'"
+                ),
+                (),
+            )
+            .expect("查询字段类型失败")
+            .expect("正文字段不存在");
+        assert_eq!(content_type, "mediumtext");
+
+        // 4. 清理测试数据库
+        drop(conn);
+        drop(pool);
+        let cleanup_pool = Pool::new(build_opts(&config, false)).expect("连接数据库服务失败");
+        let mut cleanup_conn = cleanup_pool.get_conn().expect("获取连接失败");
+        cleanup_conn
+            .query_drop("DROP DATABASE IF EXISTS `litelearn_migration_test`")
+            .expect("清理测试库失败");
+    }
 }

@@ -2,6 +2,7 @@
 
 /** 发布版本下隐藏 Windows 控制台窗口 */
 /** @brief 程序入口 */
-fn main() {
+fn main()
+{
     litelearn_lib::run()
 }

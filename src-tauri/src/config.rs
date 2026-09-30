@@ -8,7 +8,8 @@ use tauri::{AppHandle, Manager};
  * 优先级: 配置文件 < 环境变量覆盖
  */
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DbConfig {
+pub struct DbConfig
+{
     /** 数据库地址 */
     pub host: String,
     /** 数据库端口 */
@@ -21,25 +22,29 @@ pub struct DbConfig {
     pub database: String,
 }
 
-impl Default for DbConfig {
+impl Default for DbConfig
+{
     /**
      * @brief 返回默认数据库配置
      *
      * @return 默认配置
      */
-    fn default() -> Self {
-        DbConfig {
+    fn default() -> Self
+    {
+        DbConfig
+        {
             host: String::from("127.0.0.1"),
             port: 3306,
             user: String::from("root"),
-            // 密码不在源码中提供默认值, 请在应用内「设置」或环境变量中配置
+            // 密码不在源码中提供默认值, 请在应用内设置或环境变量中配置
             password: String::from(""),
             database: String::from("litelearn"),
         }
     }
 }
 
-impl DbConfig {
+impl DbConfig
+{
     /**
      * @brief 使用环境变量覆盖配置
      *
@@ -49,27 +54,37 @@ impl DbConfig {
      *
      * @return 无
      */
-    fn apply_env(&mut self) {
-        if let Ok(value) = std::env::var("LITELEARN_DB_HOST") {
-            if !value.is_empty() {
+    fn apply_env(&mut self)
+    {
+        if let Ok(value) = std::env::var("LITELEARN_DB_HOST")
+        {
+            if !value.is_empty()
+            {
                 self.host = value;
             }
         }
-        if let Ok(value) = std::env::var("LITELEARN_DB_PORT") {
-            if let Ok(port) = value.parse::<u16>() {
+        if let Ok(value) = std::env::var("LITELEARN_DB_PORT")
+        {
+            if let Ok(port) = value.parse::<u16>()
+            {
                 self.port = port;
             }
         }
-        if let Ok(value) = std::env::var("LITELEARN_DB_USER") {
-            if !value.is_empty() {
+        if let Ok(value) = std::env::var("LITELEARN_DB_USER")
+        {
+            if !value.is_empty()
+            {
                 self.user = value;
             }
         }
-        if let Ok(value) = std::env::var("LITELEARN_DB_PASSWORD") {
+        if let Ok(value) = std::env::var("LITELEARN_DB_PASSWORD")
+        {
             self.password = value;
         }
-        if let Ok(value) = std::env::var("LITELEARN_DB_NAME") {
-            if !value.is_empty() {
+        if let Ok(value) = std::env::var("LITELEARN_DB_NAME")
+        {
+            if !value.is_empty()
+            {
                 self.database = value;
             }
         }
@@ -84,7 +99,8 @@ impl DbConfig {
  * @param app 应用句柄
  * @return 配置文件路径
  */
-fn config_path(app: &AppHandle) -> Result<PathBuf, String> {
+fn config_path(app: &AppHandle) -> Result<PathBuf, String>
+{
     let dir = app
         .path()
         .app_config_dir()
@@ -99,11 +115,15 @@ fn config_path(app: &AppHandle) -> Result<PathBuf, String> {
  * @param app 应用句柄
  * @return 数据库配置
  */
-pub fn load(app: &AppHandle) -> DbConfig {
+pub fn load(app: &AppHandle) -> DbConfig
+{
     let mut config = DbConfig::default();
-    if let Ok(path) = config_path(app) {
-        if let Ok(content) = std::fs::read_to_string(&path) {
-            if let Ok(parsed) = serde_json::from_str::<DbConfig>(&content) {
+    if let Ok(path) = config_path(app)
+    {
+        if let Ok(content) = std::fs::read_to_string(&path)
+        {
+            if let Ok(parsed) = serde_json::from_str::<DbConfig>(&content)
+            {
                 config = parsed;
             }
         }
@@ -119,7 +139,8 @@ pub fn load(app: &AppHandle) -> DbConfig {
  * @param config 数据库配置
  * @return 无
  */
-pub fn save(app: &AppHandle, config: &DbConfig) -> Result<(), String> {
+pub fn save(app: &AppHandle, config: &DbConfig) -> Result<(), String>
+{
     let path = config_path(app)?;
     let content = serde_json::to_string_pretty(config).map_err(|error| error.to_string())?;
     std::fs::write(path, content).map_err(|error| error.to_string())
