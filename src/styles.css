@@ -744,6 +744,24 @@ mark
 
 
 
+.editor-host
+{
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-input-bg);
+}
+
+.editor-host .cm-editor
+{
+    height: 100%;
+}
+
+.content-editor
+{
+    flex: 1;
+    min-height: 220px;
+}
 
 .detail-footer
 {
