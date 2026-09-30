@@ -29,6 +29,19 @@ function current_content()
 }
 
 /**
+ * @brief 读取索引输入框内容
+ *
+ * @return 中文索引与英文索引
+ */
+function current_indexes()
+{
+    return {
+        zh: ui.detailZhIndex.value.trim(),
+        en: ui.detailEnIndex.value.trim(),
+    };
+}
+
+/**
  * @brief 判断是否存在未保存修改
  *
  * @return 是否存在修改
@@ -39,6 +52,7 @@ export function is_dirty()
     {
         return false;
     }
+    const indexes = current_indexes();
     return (
         current_content() !== state.snapshot.content ||
         indexes.zh !== state.snapshot.zhIndex ||
@@ -99,6 +113,8 @@ export async function open_snippet(id)
 
     const stack_name = current_stack_name_for(row.stack_id);
     await set_stack_language(stack_name);
+    ui.detailZhIndex.value = row.zh_index;
+    ui.detailEnIndex.value = row.en_index;
     set_content(row.content);
 
     ui.detailEmpty.hidden = true;
@@ -136,6 +152,7 @@ export async function save_current()
         return false;
     }
     const content = current_content();
+    const indexes = current_indexes();
     if (!indexes.zh && !indexes.en)
     {
         toast("中文索引与英文索引至少填写一项", { type: "error" });
@@ -217,6 +234,8 @@ export async function delete_current()
         await api.delete_snippet(id);
         state.currentSnippetId = null;
         state.snapshot = { zhIndex: "", enIndex: "", content: "" };
+        ui.detailZhIndex.value = "";
+        ui.detailEnIndex.value = "";
         set_content("");
         ui.detailBody.hidden = true;
         ui.detailEmpty.hidden = false;
@@ -335,6 +354,7 @@ export function init_detail()
         {
             return;
         }
+        const indexes = current_indexes();
         actions.open_new_snippet({
             stack_id: row.stack_id,
             zh_index: indexes.zh,
@@ -342,6 +362,7 @@ export function init_detail()
             content: get_content(),
         });
     });
+    for (const input of [ui.detailZhIndex, ui.detailEnIndex])
     {
         input.addEventListener("input", update_dirty_indicator);
     }

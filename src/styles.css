@@ -748,6 +748,42 @@ mark
     flex: 1;
 }
 
+.detail-index
+{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+}
+
+.index-field
+{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 180px;
+    font-size: 12px;
+    color: var(--color-text-light);
+}
+
+.index-field input
+{
+    flex: 1;
+    min-width: 0;
+    padding: 6px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-input-bg);
+    color: var(--color-text);
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.index-field input:focus
+{
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(47, 143, 111, 0.1);
+}
 
 .editor-host
 {
