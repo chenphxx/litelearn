@@ -71,6 +71,8 @@ export const ui = {
     detailCreated: document.getElementById("detail-created"),
     detailUpdated: document.getElementById("detail-updated"),
     detailLines: document.getElementById("detail-lines"),
+    btnFontDec: document.getElementById("btn-font-dec"),
+    btnFontInc: document.getElementById("btn-font-inc"),
     contentEditor: document.getElementById("content-editor"),
     btnCodeCopy: document.getElementById("btn-code-copy"),
     btnCodeCopyMd: document.getElementById("btn-code-copy-md"),

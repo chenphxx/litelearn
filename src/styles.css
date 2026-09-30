@@ -33,6 +33,7 @@
     --radius: 10px;
     --radius-lg: 14px;
     --font-code: "Cascadia Code", "Consolas", "Microsoft YaHei", monospace;
+    --content-font-size: 13px;
     color-scheme: light;
 }
 
@@ -742,6 +743,10 @@ mark
     font-weight: 600;
 }
 
+.meta-spacer
+{
+    flex: 1;
+}
 
 
 .editor-host

@@ -269,3 +269,57 @@ export function focus_code()
         editor_view.focus();
     }
 }
+
+/* 正文字号范围与本地存储键 */
+const FONT_SIZE_KEY = "litelearn-editor-font-size";
+const MIN_FONT_SIZE = 11;
+const MAX_FONT_SIZE = 24;
+const DEFAULT_FONT_SIZE = 13;
+
+/** 当前正文字号像素值 */
+let current_font_size = DEFAULT_FONT_SIZE;
+
+/**
+ * @brief 应用正文字号
+ *
+ * 字号通过 CSS 变量作用于编辑器与行号, 并记录到本地
+ *
+ * @param size 字号像素值
+ * @return 无
+ */
+function apply_font_size(size)
+{
+    const clamped = Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, Math.round(size)));
+    current_font_size = clamped;
+    document.documentElement.style.setProperty("--content-font-size", `${clamped}px`);
+    localStorage.setItem(FONT_SIZE_KEY, String(clamped));
+    ui.btnFontDec.disabled = clamped <= MIN_FONT_SIZE;
+    ui.btnFontInc.disabled = clamped >= MAX_FONT_SIZE;
+}
+
+/**
+ * @brief 读取已保存的正文字号
+ *
+ * @return 字号像素值, 无记录或记录无效时返回默认值
+ */
+function stored_font_size()
+{
+    const saved = Number(localStorage.getItem(FONT_SIZE_KEY));
+    if (!Number.isFinite(saved) || saved <= 0)
+    {
+        return DEFAULT_FONT_SIZE;
+    }
+    return Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, saved));
+}
+
+/**
+ * @brief 初始化正文字号调整
+ *
+ * @return 无
+ */
+export function init_font_size()
+{
+    apply_font_size(stored_font_size());
+    ui.btnFontDec.addEventListener("click", () => apply_font_size(current_font_size - 1));
+    ui.btnFontInc.addEventListener("click", () => apply_font_size(current_font_size + 1));
+}

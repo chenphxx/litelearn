@@ -216,6 +216,7 @@ async function init()
     bind_dialog_layout();
     init_menu();
     init_editors(on_editor_change);
+    init_font_size();
     init_stacks();
     init_results();
     init_detail();
