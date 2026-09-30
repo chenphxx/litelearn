@@ -232,6 +232,23 @@ export function check_connection()
  * @param sql SQL 语句
  * @return 分析结果
  */
+export function analyze_sql(sql)
+{
+    return invoke("analyze_sql", { sql });
+}
+
+/**
+ * @brief 执行 SQL 语句
+ *
+ * @param sql SQL 语句
+ * @param readonly 是否只读模式
+ * @return 执行结果
+ */
+export function execute_sql(sql, readonly)
+{
+    return invoke("execute_sql", { sql, readonly });
+}
+
 /**
  * @brief 选择保存路径
  *

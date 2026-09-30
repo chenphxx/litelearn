@@ -169,6 +169,7 @@ async function init()
     init_backup();
     init_recycle();
     init_history();
+    init_sql();
     init_connection();
     wire_actions();
     init_menu_actions();

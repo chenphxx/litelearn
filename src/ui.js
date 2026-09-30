@@ -125,6 +125,16 @@ export const ui = {
     btnImportSave: document.getElementById("btn-import-save"),
     btnImportCancel: document.getElementById("btn-import-cancel"),
 
+    sqlDialog: document.getElementById("sql-dialog"),
+    sqlInput: document.getElementById("sql-input"),
+    sqlReadonly: document.getElementById("sql-readonly"),
+    sqlResult: document.getElementById("sql-result"),
+    sqlHistory: document.getElementById("sql-history"),
+    sqlHistoryBar: document.getElementById("sql-history-bar"),
+    btnSqlRun: document.getElementById("btn-sql-run"),
+    btnSqlClear: document.getElementById("btn-sql-clear"),
+    btnSqlHistoryClear: document.getElementById("btn-sql-history-clear"),
+    btnSqlClose: document.getElementById("btn-sql-close"),
 
     recycleDialog: document.getElementById("recycle-dialog"),
     recycleBody: document.getElementById("recycle-body"),

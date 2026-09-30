@@ -69,6 +69,31 @@ pub struct DeletedSnippet
 }
 
 /**
+ * @brief SQL 控制台执行结果
+ */
+#[derive(Serialize)]
+pub struct SqlResult
+{
+    /** 列名列表 */
+    pub columns: Vec<String>,
+    /** 数据行 */
+    pub rows: Vec<Vec<String>>,
+    /** 受影响行数 */
+    pub affected: u64,
+}
+
+/**
+ * @brief SQL 语句分析结果
+ */
+#[derive(Serialize)]
+pub struct SqlAnalysis
+{
+    /** 是否为只读语句 */
+    pub readonly: bool,
+    /** 是否需要二次确认的危险操作 */
+    pub dangerous: bool,
+}
+/**
  * @brief 备份导出结果统计
  */
 #[derive(Serialize)]

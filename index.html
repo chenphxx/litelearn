@@ -246,6 +246,33 @@
       <div class="resize-handle"></div>
     </dialog>
 
+    <!-- SQL 控制台弹窗 -->
+    <dialog id="sql-dialog" class="dialog resizable-dialog">
+      <div class="dialog-box sql-box">
+        <h3 class="drag-handle">SQL 控制台</h3>
+        <textarea
+          id="sql-input"
+          spellcheck="false"
+          placeholder="输入单条 SQL 语句, 按 Ctrl+Enter 执行"
+        ></textarea>
+        <div class="sql-toolbar">
+          <label class="checkbox-row">
+            <input id="sql-readonly" type="checkbox" checked />
+            <span>只读模式(拦截写操作)</span>
+          </label>
+          <span class="spacer"></span>
+          <button id="btn-sql-run" class="btn primary" type="button">执行</button>
+          <button id="btn-sql-clear" class="btn" type="button">清空</button>
+          <button id="btn-sql-close" class="btn" type="button">关闭</button>
+        </div>
+        <div id="sql-history-bar" class="sql-history-bar" hidden>
+          <div id="sql-history" class="history-list sql-history"></div>
+          <button id="btn-sql-history-clear" class="btn small" type="button">清空历史</button>
+        </div>
+        <div id="sql-result" class="sql-result"></div>
+      </div>
+      <div class="resize-handle"></div>
+    </dialog>
 
     <!-- 回收站弹窗 -->
     <dialog id="recycle-dialog" class="dialog resizable-dialog">

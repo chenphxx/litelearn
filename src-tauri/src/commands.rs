@@ -750,6 +750,114 @@ pub async fn save_config(
     Ok(())
 }
 
+/**
+ * @brief 分析 SQL 语句类型
+ *
+ * 供前端判断是否需要二次确认, 以及只读模式下是否允许执行
+ *
+ * @param sql SQL 语句
+ * @return 分析结果
+ */
+#[tauri::command]
+pub async fn analyze_sql(sql: String) -> Result<SqlAnalysis, String>
+{
+    let sql = sql.trim().to_string();
+    if sql.is_empty()
+    {
+        return Err(String::from("SQL 语句不能为空"));
+    }
+    Ok(SqlAnalysis
+    {
+        readonly: is_readonly_statement(&sql),
+        dangerous: is_dangerous_statement(&sql),
+    })
+}
+/**
+ * @brief 执行 SQL 语句
+ *
+ * @param state 应用状态
+ * @param sql SQL 语句
+ * @param readonly 只读模式, 仅允许查询语句
+ * @return 执行结果
+ */
+#[tauri::command]
+pub async fn execute_sql(
+    state: State<'_, AppState>,
+    sql: String,
+    readonly: bool,
+) -> Result<SqlResult, String>
+{
+    let sql = sql.trim().to_string();
+    if sql.is_empty()
+    {
+        return Err(String::from("SQL 语句不能为空"));
+    }
+    if readonly && !is_readonly_statement(&sql)
+    {
+        return Err(String::from("只读模式下仅允许执行 SELECT / SHOW / DESC / EXPLAIN 语句"));
+    }
+
+    let mut conn = db::get_conn(&state)?;
+    let mut result: QueryResult<Text> = conn.query_iter(&sql).map_err(|error| error.to_string())?;
+    let columns: Vec<String> = result
+        .columns()
+        .as_ref()
+        .iter()
+        .map(|column| column.name_str().to_string())
+        .collect();
+    let mut rows: Vec<Vec<String>> = Vec::new();
+    for row in result.by_ref()
+    {
+        let row = row.map_err(|error| error.to_string())?;
+        let values: Vec<String> = row
+            .unwrap()
+            .iter()
+            .map(|value| value.as_sql(false))
+            .collect();
+        rows.push(values);
+    }
+    let affected = result.affected_rows();
+    Ok(SqlResult
+    {
+        columns,
+        rows,
+        affected,
+    })
+}
+
+/**
+ * @brief 判断是否为只读语句
+ *
+ * @param sql SQL 语句
+ * @return 是否为只读语句
+ */
+fn is_readonly_statement(sql: &str) -> bool
+{
+    let first = sql.split_whitespace().next().unwrap_or("").to_uppercase();
+    ["SELECT", "SHOW", "DESC", "DESCRIBE", "EXPLAIN", "WITH"].contains(&first.as_str())
+}
+
+/**
+ * @brief 判断 SQL 是否属于需要二次确认的危险操作
+ *
+ * @param sql SQL 语句
+ * @return 是否需要确认
+ */
+fn is_dangerous_statement(sql: &str) -> bool
+{
+    let upper = sql.to_uppercase();
+    let first = upper.split_whitespace().next().unwrap_or("");
+    if ["DROP", "TRUNCATE", "ALTER", "RENAME", "GRANT", "REVOKE"].contains(&first)
+    {
+        return true;
+    }
+    if (first == "DELETE" || first == "UPDATE") && !upper.contains(" WHERE ")
+    {
+        return true;
+    }
+    false
+}
+
 #[cfg(test)]
 mod tests
 {
