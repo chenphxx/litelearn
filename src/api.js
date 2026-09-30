@@ -153,6 +153,19 @@ export function export_backup(format, path)
  * @param language 代码块语言标记
  * @return 无
  */
+export function export_snippet(id, path, language)
+{
+    return invoke("export_snippet", { id, path, language });
+}
+
+/**
+ * @brief 预览导入结果
+ *
+ * @param format 备份格式
+ * @param path 备份文件路径
+ * @param overwrite 是否覆盖已有片段
+ * @return 导入统计
+ */
 export function preview_import(format, path, overwrite)
 {
     return invoke("preview_import", { format, path, overwrite });

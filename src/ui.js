@@ -70,6 +70,10 @@ export const ui = {
     detailCreated: document.getElementById("detail-created"),
     detailUpdated: document.getElementById("detail-updated"),
     detailLines: document.getElementById("detail-lines"),
+    btnCodeCopy: document.getElementById("btn-code-copy"),
+    btnCodeCopyMd: document.getElementById("btn-code-copy-md"),
+    btnCodeExport: document.getElementById("btn-code-export"),
+    btnCodeClone: document.getElementById("btn-code-clone"),
     btnCodeSave: document.getElementById("btn-code-save"),
     btnDelete: document.getElementById("btn-delete"),
 
@@ -172,6 +176,25 @@ export function escape_html(text)
  * @param text 文本内容
  * @return 是否复制成功
  */
+export async function copy_text(text)
+{
+    try
+    {
+        await navigator.clipboard.writeText(text);
+        return true;
+    }
+    catch (error)
+    {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        const ok = document.execCommand("copy");
+        textarea.remove();
+        return ok;
+    }
+}
+
 /**
  * @brief 显示轻量提示
  *

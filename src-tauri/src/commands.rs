@@ -573,6 +573,33 @@ pub async fn export_backup(
 }
 
 /**
+ * @brief 导出单个片段为 Markdown 文件
+ *
+ * @param state 应用状态
+ * @param id 片段编号
+ * @param path 保存路径
+ * @param language 代码块语言标记
+ * @return 无
+ */
+#[tauri::command]
+pub async fn export_snippet(
+    state: State<'_, AppState>,
+    id: u64,
+    path: String,
+    language: String,
+) -> Result<(), String>
+{
+    let path = path.trim().to_string();
+    if path.is_empty()
+    {
+        return Err(String::from("保存路径不能为空"));
+    }
+    let mut conn = db::get_conn(&state)?;
+    let content = backup::export_snippet_markdown(&mut conn, id, &language)?;
+    std::fs::write(&path, content).map_err(|error| format!("写入文件失败: {}", error))
+}
+
+/**
  * @brief 预览备份导入结果, 不修改数据库
  *
  * @param state 应用状态

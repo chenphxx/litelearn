@@ -643,6 +643,50 @@ pub fn export(conn: &mut PooledConn, format: &str) -> Result<ExportOutput, Strin
 }
 
 /**
+ * @brief 生成单篇文章的 Markdown 内容
+ *
+ * @param conn 数据库连接
+ * @param id 片段编号
+ * @param language 代码块语言标记, 为空时不输出语言
+ * @return Markdown 文本
+ */
+pub fn export_snippet_markdown(conn: &mut PooledConn, id: u64, language: &str) -> Result<String, String>
+{
+    let (id, zh_index, en_index, content_text, stack_name, updated_at): (
+        u64,
+        String,
+        String,
+        String,
+        String,
+        String,
+    ) = conn
+        .exec_first(
+            concat!(
+                "SELECT p.id, p.zh_index, p.en_index, p.content, k.name, ",
+                "DATE_FORMAT(p.updated_at, '%Y-%m-%d %H:%i:%s') AS updated_at ",
+                "FROM snippets p JOIN stacks k ON k.id = p.stack_id ",
+                "WHERE p.id = ? AND p.deleted_at IS NULL"
+            ),
+            (id,),
+        )
+        .map_err(|error| error.to_string())?
+        .ok_or_else(|| String::from("片段不存在或已删除"))?;
+
+    let title = if zh_index.trim().is_empty() { en_index.clone() } else { zh_index.clone() };
+    let mut content = String::new();
+    content.push_str(&format!("# {}\n\n", title));
+    content.push_str(&format!("- 技术栈: {}\n", stack_name));
+    content.push_str(&format!("- 片段编号: #{}\n", id));
+    if !en_index.trim().is_empty()
+    {
+        content.push_str(&format!("- 英文索引: {}\n", en_index));
+    }
+    content.push_str(&format!("- 更新时间: {}\n\n", updated_at));
+    content.push_str(&format!("```{}\n{}\n```\n", language.trim(), content_text));
+    Ok(content)
+}
+
+/**
  * @brief 预览导入结果, 不修改数据库
  *
  * @param conn 数据库连接

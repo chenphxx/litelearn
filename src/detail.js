@@ -252,6 +252,76 @@ export async function delete_current()
  *
  * @return 无
  */
+export async function copy_content()
+{
+    const text = get_content();
+    if (!text)
+    {
+        toast("没有可复制的内容", { type: "info" });
+        return;
+    }
+    await copy_text(text);
+    toast("正文已复制", { type: "success" });
+}
+
+/**
+ * @brief 复制为 Markdown 内容
+ *
+ * @return 无
+ */
+export async function copy_content_as_markdown()
+{
+    const text = get_content();
+    if (!text)
+    {
+        toast("没有可复制的内容", { type: "info" });
+        return;
+    }
+    const fence = fence_for_stack(ui.detailStack.textContent);
+    const content = `\`\`\`${fence}\n${text}\n\`\`\``;
+    await copy_text(content);
+    toast("Markdown 内容已复制", { type: "success" });
+}
+
+/**
+ * @brief 另存当前文章为 Markdown 文件
+ *
+ * @return 无
+ */
+export async function export_current()
+{
+    if (state.currentSnippetId === null)
+    {
+        return;
+    }
+    const row = find_row(state.currentSnippetId);
+    const title = row ? row.zh_index || row.en_index || `snippet-${row.id}` : "snippet";
+    const path = await api.pick_save_path({
+        title: "导出文章",
+        defaultPath: `${title}.md`,
+        filters: [{ name: "Markdown", extensions: ["md"] }],
+    });
+    if (!path)
+    {
+        return;
+    }
+    try
+    {
+        const fence = fence_for_stack(ui.detailStack.textContent);
+        await api.export_snippet(state.currentSnippetId, path, fence);
+        toast("已导出 Markdown 文件", { type: "success" });
+    }
+    catch (error)
+    {
+        toast(`导出失败: ${error}`, { type: "error", timeout: 5000 });
+    }
+}
+
+/**
+ * @brief 绑定详情区事件
+ *
+ * @return 无
+ */
 export function init_detail()
 {
     ui.btnCodeSave.addEventListener("click", save_current);
