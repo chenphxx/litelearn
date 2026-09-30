@@ -10,6 +10,7 @@
     <div id="app">
       <!-- 顶部工具栏 -->
       <header class="toolbar">
+        <button id="btn-sidebar-toggle" class="btn icon" type="button" title="折叠/展开侧边栏"></button>
         <button id="conn-status" class="conn-status" type="button" title="数据库连接状态, 点击打开设置">
           <span id="conn-dot" class="conn-dot"></span>
           <span id="conn-text">未连接</span>
@@ -37,6 +38,16 @@
 
       <!-- 主体区域: 左侧技术栈与结果列表 + 右侧详情 -->
       <main class="main">
+        <aside id="sidebar" class="sidebar">
+          <div class="sidebar-head">
+            <span class="sidebar-title">技术栈</span>
+            <button id="btn-new-stack" class="btn icon small" type="button" title="新建技术栈"></button>
+          </div>
+          <div id="sidebar-list" class="sidebar-list"></div>
+          <div class="sidebar-foot">
+            共 <span id="sidebar-total">0</span> 篇文章
+          </div>
+        </aside>
 
         <section class="result-panel">
           <table id="result-table">

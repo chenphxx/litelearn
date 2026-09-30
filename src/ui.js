@@ -35,6 +35,7 @@ export const icons = {
  */
 export const ui = {
     // 顶部工具栏
+    btnSidebarToggle: document.getElementById("btn-sidebar-toggle"),
     connStatus: document.getElementById("conn-status"),
     connDot: document.getElementById("conn-dot"),
     connText: document.getElementById("conn-text"),
@@ -45,6 +46,9 @@ export const ui = {
     moreMenu: document.getElementById("more-menu"),
 
     // 侧边栏
+    sidebar: document.getElementById("sidebar"),
+    sidebarList: document.getElementById("sidebar-list"),
+    sidebarTotal: document.getElementById("sidebar-total"),
     btnNewStack: document.getElementById("btn-new-stack"),
 
     // 结果区

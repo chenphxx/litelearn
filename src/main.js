@@ -93,6 +93,17 @@ function init_menu_actions()
  *
  * @return 无
  */
+function init_sidebar_toggle()
+{
+    state.sidebarCollapsed = localStorage.getItem("litelearn-sidebar-collapsed") === "1";
+    ui.sidebar.classList.toggle("collapsed", state.sidebarCollapsed);
+    ui.btnSidebarToggle.addEventListener("click", () =>
+    {
+        state.sidebarCollapsed = !state.sidebarCollapsed;
+        ui.sidebar.classList.toggle("collapsed", state.sidebarCollapsed);
+        localStorage.setItem("litelearn-sidebar-collapsed", state.sidebarCollapsed ? "1" : "0");
+    });
+}
 
 /**
  * @brief 初始化详情区宽度分隔条
@@ -159,6 +170,7 @@ async function init()
     init_connection();
     wire_actions();
     init_menu_actions();
+    init_sidebar_toggle();
     init_icons();
     init_shortcuts();
 
